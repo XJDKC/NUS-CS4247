@@ -318,6 +318,9 @@ static void MyDrawFunc(void)
     // TASK 1: WRITE YOUR CODE HERE. //
     ///////////////////////////////////
 
+    // scale the modelMat0 by using the glm::scale function
+    modelMat0 = glm::scale(modelMat0, glm::vec3(skyboxSize, skyboxSize, skyboxSize));
+
 
     glm::mat4 modelViewMat0 = viewMat * modelMat0;
     glm::mat4 modelViewProjMat0 = projMat * modelViewMat0;
