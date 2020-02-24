@@ -1,0 +1,9 @@
+.vs/
+lib/
+include/
+[De]bug/
+
+*.dll
+*.sln
+*.exe
+*.vcxproj*
