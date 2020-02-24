@@ -133,7 +133,43 @@ void compute_tangent_vectors( vec3 N, vec3 p, vec2 uv, out vec3 T, out vec3 B )
     B = normalize( dp2perp * duv1.y + dp1perp * duv2.y );  // Binormal vector
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Compute perturbation vector in eye space
+/////////////////////////////////////////////////////////////////////////////
+vec3 trans_normal(vec3 N, vec3 p, vec2 uv, vec3 tanPerturbedNormal) {
+    vec3 T;
+    vec3 B;
 
+    // get eye-space Tangent and Binormal vectors 
+    compute_tangent_vectors(N, p, uv, T, B);
+
+    // normalize the normal vector in tangent-space
+    tanPerturbedNormal = normalize(tanPerturbedNormal);
+    
+    // transform perturbation vector to eye space
+    vec3 ecPerturbedNormal = tanPerturbedNormal.x * T +
+                             tanPerturbedNormal.y * B +
+                             tanPerturbedNormal.z * N;
+
+    return ecPerturbedNormal;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Perform Phong lighting computation.
+/////////////////////////////////////////////////////////////////////////////
+vec3 do_lighting_computation(vec3 L, vec3 N, vec3 V, vec3 diffuseColor) {
+    vec3 reflectVec = reflect(-L, N);
+    float N_dot_L = max(0.0, dot(L, N));
+    float R_dot_V = max(0.0, dot(reflectVec, V));
+
+    float spec = (R_dot_V == 0.0)? 0.0 : pow(R_dot_V, MatlShininess);
+
+    vec3 tempColor = LightAmbient.rgb * diffuseColor +
+                     LightDiffuse.rgb * diffuseColor * N_dot_L  +
+                     LightSpecular.rgb * spec;
+    
+    return tempColor;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Compute fragment color on brick cube.
@@ -164,7 +200,21 @@ void drawBrickCube()
         // TASK 2: WRITE YOUR CODE HERE. //
         ///////////////////////////////////
 
-        FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Replace this with your code.
+        // notice: I encapsulate some duplicated code into functions.
+
+        // get tangent-space perturbation vector from normal map
+        vec3 tanPerturbedNormal = texture(BrickNormalMap, v2fTexCoord.st).rgb * 2.0 - 1.0;
+        tanPerturbedNormal.z *= DeltaNormal_Z_Scale;
+
+        // use trans_normal function to get the normal vector in eye-space
+        vec3 ecPerturbedNormal = trans_normal(necNormal, ecPosition, v2fTexCoord.st, tanPerturbedNormal);
+
+        // use eye-space perturbation vector as normal vector
+        vec3 diffuseColor = texture(BrickDiffuseMap, v2fTexCoord.st).rgb;
+        vec3 tempColor = do_lighting_computation(lightVec, ecPerturbedNormal, viewVec, diffuseColor);
+        
+        // write computed fragment color to FragColor
+        FragColor = vec4(tempColor, 1.0);  // Replace this with your code.
     }
     else discard;
 }
@@ -209,7 +259,36 @@ void drawWoodenCube()
         // TASK 3: WRITE YOUR CODE HERE. //
         ///////////////////////////////////
 
-        FragColor = vec4(0.0, 0.0, 1.0, 1.0);  // Replace this with your code.
+        // notice: I encapsulate some duplicated code into functions.
+
+        vec2 c = MirrorTileDensity * v2fTexCoord.st;
+        vec2 p = fract(c) - vec2(0.5);
+        float sqrtDist = p.x * p.x + p.y * p.y;
+        float maxDist = MirrorRadius * MirrorRadius;
+
+        if (sqrtDist >= maxDist) { // in wood region
+            // get diffuse color from WoodDiffuseMap
+            vec3 diffuseColor = texture(WoodDiffuseMap, v2fTexCoord.st).rgb;
+
+            // do lighting computation
+            vec3 tempColor = do_lighting_computation(lightVec, necNormal, viewVec, diffuseColor);
+
+            FragColor = vec4(tempColor, 1.0);
+        } else { // in mirror region
+
+            // get eye-space perturbation vector
+            float height = sqrt(maxDist - sqrtDist);
+            vec3 tanPerturbedNormal = normalize(vec3(p.x, p.y, height));
+            vec3 ecPerturbedNormal = trans_normal(necNormal, ecPosition, v2fTexCoord.st, tanPerturbedNormal);
+
+            // get diffuse Color from cubemap
+            vec3 ecReflecViewVec = reflect(-viewVec, ecPerturbedNormal);
+            vec3 wcReflecViewVec = inverse(NormalMatrix) * ecReflecViewVec;
+            vec3 diffuseColor = texture(EnvMap, wcReflecViewVec).rgb;
+
+            // write computed fragment color to FragColor
+            FragColor = vec4(diffuseColor, 1.0);
+        }
     }
     else discard;
 }
