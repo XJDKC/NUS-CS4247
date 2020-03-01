@@ -187,6 +187,7 @@ static void SetUpShadowMapAndFBO(void)
     glBindTexture(GL_TEXTURE_2D, depthTex);
     glTexStorage2D(GL_TEXTURE_2D, 1, texInternalFormat, shadowMapWidth, shadowMapHeight);
 
+    // Set texture parameters, to use PCF we need to set the FILTER to GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -434,7 +435,7 @@ static void RenderShadowMap(void)
 {
     // Bind to shadowmap's FBO.
     glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
-    glViewport(0, 0, fboWidth, fboHeight); // Viewport for the texture.
+    glViewport(0, 0, fboWidth, fboHeight);  // Viewport for the texture.
     glClear(GL_DEPTH_BUFFER_BIT);
 
     // Perspective projection matrix.
@@ -455,23 +456,20 @@ static void RenderShadowMap(void)
     // TASK: WRITE YOUR CODE HERE. //
     /////////////////////////////////
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
-    glViewport(0, 0, fboWidth, fboHeight); // Viewport for the texture.
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    // Render the objects to get the shadow mapping
     RenderObjects(viewMat, projMat);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    // Generate matrix B
     glm::mat4 B = glm::mat4(0.5, 0.0, 0.0, 0.0,
                             0.0, 0.5, 0.0, 0.0,
                             0.0, 0.0, 0.5, 0.0,
                             0.5, 0.5, 0.5, 1.0);
 
+    // Calculate the shadowMatrix for transforming world-space point to shadow-map space.
     shadowMatrix = B * projMat * viewMat;
 
+    // Pass the matrix to the shader program
     shaderProg.setUniform("ShadowMatrix", shadowMatrix);
-
 }
 
 
@@ -524,8 +522,8 @@ static void MyDrawFunc(void)
 
     shaderProg.setUniform("RenderShadowMapMode", false);
 
-    shaderProg.setUniform("ShadowMap", (GLuint)0);
-    shaderProg.setUniform("ProjectorImage", (GLuint)1);
+    // shaderProg.setUniform("ShadowMap", (GLuint)0);
+    // shaderProg.setUniform("ProjectorImage", (GLuint)1);
 
     shaderProg.setUniform("LightPosition", ecLightPosition);
     shaderProg.setUniform("LightAmbient", lightAmbient);
