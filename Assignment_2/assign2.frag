@@ -110,17 +110,18 @@ void DrawSceneWithProjection()
 
     // 1. Calculate the shadowmap coordinates of this fragment
     vec4 smPosition = ShadowMatrix * vec4(wcPosition, 1.0);
-    vec3 smCoord = smPosition.xyz / smPosition.w;
+    vec4 smCoord = vec4(smPosition.xyz / smPosition.w, 1.0);
+    smCoord.z -= 1e5;   // Subtract a tolerance value
 
     // 2. Read from ProjectorImage
     vec3 projImgColor = texture(ProjectorImage, smCoord.st).xyz;
 
     // 3. Use PCF to get the shadowFact from the ShadowMap
     float shadowFact = 0.0;
-    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(-1,-1));
-    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(-1,+1));
-    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(+1,+1));
-    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(+1,-1));
+    shadowFact += textureProjOffset(ShadowMap, smCoord, ivec2(-1,-1));
+    shadowFact += textureProjOffset(ShadowMap, smCoord, ivec2(-1,+1));
+    shadowFact += textureProjOffset(ShadowMap, smCoord, ivec2(+1,+1));
+    shadowFact += textureProjOffset(ShadowMap, smCoord, ivec2(+1,-1));
     shadowFact *= 0.25;
 
     // 4. Consider the fragment outside the FOV of the projector
