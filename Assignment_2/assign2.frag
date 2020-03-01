@@ -111,7 +111,7 @@ void DrawSceneWithProjection()
     // 1. Calculate the shadowmap coordinates of this fragment
     vec4 smPosition = ShadowMatrix * vec4(wcPosition, 1.0);
     vec4 smCoord = vec4(smPosition.xyz / smPosition.w, 1.0);
-    smCoord.z -= 1e5;   // Subtract a tolerance value
+    smCoord.z -= 1e-3;   // Subtract a tolerance value
 
     // 2. Read from ProjectorImage
     vec3 projImgColor = texture(ProjectorImage, smCoord.st).xyz;
