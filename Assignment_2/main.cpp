@@ -174,6 +174,36 @@ static void SetUpShadowMapAndFBO(void)
 
     // const GLfloat texBorder[] = { ??? };
 
+    const GLfloat texBorder[] = { 1.0f, 0.0f, 0.0f, 0.0f };
+
+    // Generate and bind the framebuffer.
+    glGenFramebuffers(1, &fboHandle);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
+
+    // Create the depth texture object.
+    glActiveTexture(texUnit);
+    GLuint depthTex;
+    glGenTextures(1, &depthTex);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
+    glTexStorage2D(GL_TEXTURE_2D, 1, texInternalFormat, shadowMapWidth, shadowMapHeight);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, texBorder);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+    // Bind the texture to the FBO.
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachPoint, GL_TEXTURE_2D, depthTex, 0);
+
+    // Set the target for the fragment shader outputs.
+    // This becomes part of the FBO's state.
+    glDrawBuffer(GL_NONE);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -425,8 +455,23 @@ static void RenderShadowMap(void)
     // TASK: WRITE YOUR CODE HERE. //
     /////////////////////////////////
 
+    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
+    glViewport(0, 0, fboWidth, fboHeight); // Viewport for the texture.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    RenderObjects(viewMat, projMat);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glm::mat4 B = glm::mat4(0.5, 0.0, 0.0, 0.0,
+                            0.0, 0.5, 0.0, 0.0,
+                            0.0, 0.0, 0.5, 0.0,
+                            0.5, 0.5, 0.5, 1.0);
+
+    shadowMatrix = B * projMat * viewMat;
 
     shaderProg.setUniform("ShadowMatrix", shadowMatrix);
+
 }
 
 
@@ -479,8 +524,8 @@ static void MyDrawFunc(void)
 
     shaderProg.setUniform("RenderShadowMapMode", false);
 
-    //shaderProg.setUniform("ShadowMap", (GLuint)0);
-    //shaderProg.setUniform("ProjectorImage", (GLuint)1);
+    shaderProg.setUniform("ShadowMap", (GLuint)0);
+    shaderProg.setUniform("ProjectorImage", (GLuint)1);
 
     shaderProg.setUniform("LightPosition", ecLightPosition);
     shaderProg.setUniform("LightAmbient", lightAmbient);
