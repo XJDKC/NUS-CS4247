@@ -108,8 +108,38 @@ void DrawSceneWithProjection()
     // TASK: WRITE YOUR CODE HERE. //
     /////////////////////////////////
 
+    // 1. Calculate the shadowmap coordinates of this fragment
+    vec4 smPosition = ShadowMatrix * vec4(wcPosition, 1.0);
+    vec3 smCoord = smPosition.xyz / smPosition.w;
 
-    FragColor = vec4( ambientColor + shadowFact * (diffuseColor + specularColor), 1.0 );
+    // 2. Read from ProjectorImage
+    vec3 projImgColor = texture(ProjectorImage, smCoord.st).xyz;
+
+    // 3. Use PCF to get the shadowFact from the ShadowMap
+    float shadowFact = 0.0;
+    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(-1,-1));
+    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(-1,+1));
+    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(+1,+1));
+    shadowFact += textureProjOffset(ShadowMap, smPosition, ivec2(+1,-1));
+    shadowFact *= 0.25;
+
+    // 4. Consider the fragment outside the FOV of the projector
+    if (smCoord.x < 0.0 || smCoord.x > 1.0 || smCoord.y < 0.0 || smCoord.y > 1.0) {
+        shadowFact = 0.0;
+    }
+
+    // 5. Compute lighting using Phong lighting model.
+    float N_dot_L;
+    float R_dot_V_pow_n;
+    PhongLighting(N_dot_L, R_dot_V_pow_n);
+
+    // 6. Get all the colors
+    vec3 ambientColor = LightAmbient * MatlAmbient;
+    vec3 diffuseColor = projImgColor  * MatlDiffuse * N_dot_L;
+    vec3 specularColor = projImgColor * MatlSpecular * R_dot_V_pow_n;
+
+    // 7. Calculate and write the final color into the FragColor.
+    FragColor = vec4(ambientColor + shadowFact * (diffuseColor + specularColor), 1.0);
 }
 
 
