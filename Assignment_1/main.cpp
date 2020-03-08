@@ -318,6 +318,9 @@ static void MyDrawFunc(void)
     // TASK 1: WRITE YOUR CODE HERE. //
     ///////////////////////////////////
 
+    // translate the modelMat0 to camWorldPos
+    modelMat0 = glm::translate(modelMat0, camWorldPos);
+
     // scale the modelMat0 by using the glm::scale function
     modelMat0 = glm::scale(modelMat0, glm::vec3(skyboxSize, skyboxSize, skyboxSize));
 
