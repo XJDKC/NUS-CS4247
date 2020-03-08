@@ -283,7 +283,7 @@ void drawWoodenCube()
 
             // get diffuse Color from cubemap
             vec3 ecReflecViewVec = reflect(-viewVec, ecPerturbedNormal);
-            vec3 wcReflecViewVec = inverse(NormalMatrix) * ecReflecViewVec;
+            vec3 wcReflecViewVec = transpose(mat3(ViewMatrix)) * ecReflecViewVec;
             vec3 diffuseColor = texture(EnvMap, wcReflecViewVec).rgb;
 
             // write computed fragment color to FragColor
