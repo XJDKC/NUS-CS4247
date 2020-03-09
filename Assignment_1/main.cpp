@@ -1,7 +1,7 @@
 //============================================================
-// STUDENT NAME:
-// STUDENT NO.:
-// NUS EMAIL ADDRESS:
+// STUDENT NAME: Xing Rulin
+// STUDENT NO.: A0214251W
+// NUS EMAIL ADDRESS: E0518535@u.nus.edu
 // COMMENTS TO GRADER:
 //
 // ============================================================
