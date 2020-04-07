@@ -428,8 +428,9 @@ vec3 CastRay(in Ray_t ray, out bool hasHit, out vec3 hitPos, out vec3 hitNormal,
   shadow_ray.o = nearest_hitPos;
   vec3 V = normalize(ray.o - nearest_hitPos);
   for (int i = 0; i < NUM_LIGHTS; ++i) {
-    float len = distance(Light[i].position, nearest_hitPos);
     vec3 L = normalize(Light[i].position - nearest_hitPos);
+    float len = distance(Light[i].position, nearest_hitPos);
+    len = min(len, DEFAULT_TMAX);
 
     shadow_ray.d = L;
 
