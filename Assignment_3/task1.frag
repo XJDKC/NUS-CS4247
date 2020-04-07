@@ -424,23 +424,24 @@ vec3 CastRay(in Ray_t ray, out bool hasHit, out vec3 hitPos, out vec3 hitNormal,
   hitNormal = nearest_hitNormal;
   k_rg = Material[nearest_hitMatID].k_rg;
 
+  Ray_t shadow_ray;
+  shadow_ray.o = nearest_hitPos;
+  vec3 V = normalize(ray.o - nearest_hitPos);
   for (int i = 0; i < NUM_LIGHTS; ++i) {
+    float len = distance(Light[i].position, nearest_hitPos);
     vec3 L = normalize(Light[i].position - nearest_hitPos);
-    vec3 V = normalize(ray.o - nearest_hitPos);
 
-    Ray_t shadow_ray;
-    shadow_ray.o = nearest_hitPos;
     shadow_ray.d = L;
 
     bool inShadow = false;
     for (int j = 0; j < NUM_PLANES && !inShadow; ++j) {
-      if (IntersectPlane(Plane[j], shadow_ray, DEFAULT_TMIN, DEFAULT_TMAX)) {
+      if (IntersectPlane(Plane[j], shadow_ray, DEFAULT_TMIN, len)) {
         inShadow = true;
       }
     }
 
     for (int j = 0; j < NUM_SPHERES && !inShadow; ++j) {
-      if (IntersectSphere(Sphere[j], shadow_ray, DEFAULT_TMIN, DEFAULT_TMAX)) {
+      if (IntersectSphere(Sphere[j], shadow_ray, DEFAULT_TMIN, len)) {
         inShadow = true;
       }
     }
