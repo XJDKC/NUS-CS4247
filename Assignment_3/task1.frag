@@ -265,7 +265,7 @@ bool IntersectSphere(in Sphere_t sph, in Ray_t ray, in float tmin,
   // We have a hit -- output results.
   t = t0;
   hitPos = bcRo + t0 * ray.d;
-  hitNormal = normalize(bcRo + t0 * ray.d);
+  hitNormal = normalize(hitPos);
   hitPos += sph.center;
 
   return true;
@@ -376,6 +376,7 @@ vec3 CastRay(in Ray_t ray, out bool hasHit, out vec3 hitPos, out vec3 hitNormal,
     if (temp_hasHit) {
       hasHitSomething = true;
       if (temp_t < nearest_t) {
+        nearest_t = temp_t;
         nearest_hitPos = temp_hitPos;
         nearest_hitNormal = temp_hitNormal;
         nearest_hitMatID = Plane[i].materialID;
@@ -389,6 +390,7 @@ vec3 CastRay(in Ray_t ray, out bool hasHit, out vec3 hitPos, out vec3 hitNormal,
     if (temp_hasHit) {
       hasHitSomething = true;
       if (temp_t < nearest_t) {
+        nearest_t = temp_t;
         nearest_hitPos = temp_hitPos;
         nearest_hitNormal = temp_hitNormal;
         nearest_hitMatID = Sphere[i].materialID;
