@@ -526,8 +526,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // TASK 2: MODIFY THE CODE BELOW. //
   ////////////////////////////////////
 
+  vec3 averageColor = vec3(0.0);
   for (int i = 0; i < SPP; ++i) {
-    vec2 rectPoint = vec2(rand() / 2.0 - 0.5, rand() / 2.0 - 0.5) + fragCoord;
+    vec2 rectPoint = vec2(rand() - 0.5, rand() - 0.5) + fragCoord;
 
     // Current pixel 3D position in camera space.
     vec3 pixel_pos = image_origin + vec3(pixel_width * rectPoint, 0);
@@ -562,6 +563,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
       nextRay = Ray_t(hitPos, normalize(reflect(nextRay.d, hitNormal)));
     }
-    fragColor += vec4(I_result / float(SPP), 1.0);
+
+    averageColor += I_result / float(SPP);
   }
+
+  fragColor = vec4(averageColor, 1.0);
 }
