@@ -526,38 +526,42 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // TASK 2: MODIFY THE CODE BELOW. //
   ////////////////////////////////////
 
-  // Current pixel 3D position in camera space.
-  vec3 pixel_pos = image_origin + vec3(pixel_width * fragCoord, 0);
+  for (int i = 0; i < SPP; ++i) {
+    vec2 rectPoint = vec2(rand() / 2.0 - 0.5, rand() / 2.0 - 0.5) + fragCoord;
 
-  // Create primary ray.
-  Ray_t pRay;
-  pRay.o = cam_pos;
-  pRay.d =
-      normalize(cam_pos + pixel_pos.x * cam_x_axis + pixel_pos.y * cam_y_axis +
-                pixel_pos.z * cam_z_axis - pRay.o);
+    // Current pixel 3D position in camera space.
+    vec3 pixel_pos = image_origin + vec3(pixel_width * rectPoint, 0);
 
-  // Start Ray Tracing.
-  // Use iterations to emulate the recursion.
+    // Create primary ray.
+    Ray_t pRay;
+    pRay.o = cam_pos + aperture_width * (cam_x_axis * (rand() - 0.5) +
+                                         cam_y_axis * (rand() - 0.5));
+    pRay.d =
+        normalize(cam_pos + pixel_pos.x * cam_x_axis +
+                  pixel_pos.y * cam_y_axis + pixel_pos.z * cam_z_axis - pRay.o);
 
-  vec3 I_result = vec3(0.0);
-  vec3 compounded_k_rg = vec3(1.0);
-  Ray_t nextRay = pRay;
+    // Start Ray Tracing.
+    // Use iterations to emulate the recursion.
 
-  for (int level = 0; level <= NUM_ITERATIONS; level++) {
-    bool hasHit;
-    vec3 hitPos, hitNormal, k_rg;
+    vec3 I_result = vec3(0.0);
+    vec3 compounded_k_rg = vec3(1.0);
+    Ray_t nextRay = pRay;
 
-    vec3 I_local = CastRay(nextRay, hasHit, hitPos, hitNormal, k_rg);
+    for (int level = 0; level <= NUM_ITERATIONS; level++) {
+      bool hasHit;
+      vec3 hitPos, hitNormal, k_rg;
 
-    I_result += compounded_k_rg * I_local;
+      vec3 I_local = CastRay(nextRay, hasHit, hitPos, hitNormal, k_rg);
 
-    if (!hasHit)
-      break;
+      I_result += compounded_k_rg * I_local;
 
-    compounded_k_rg *= k_rg;
+      if (!hasHit)
+        break;
 
-    nextRay = Ray_t(hitPos, normalize(reflect(nextRay.d, hitNormal)));
+      compounded_k_rg *= k_rg;
+
+      nextRay = Ray_t(hitPos, normalize(reflect(nextRay.d, hitNormal)));
+    }
+    fragColor += vec4(I_result / float(SPP), 1.0);
   }
-
-  fragColor = vec4(I_result, 1.0);
 }
