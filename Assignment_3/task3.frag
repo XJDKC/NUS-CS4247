@@ -22,7 +22,7 @@ const float PI = 3.1415926536;
 const vec3 BACKGROUND_COLOR = vec3(0.1, 0.2, 0.6);
 
 // Vertical field-of-view angle of camera. In degrees.
-const float FOVY = 50.0;
+const float FOVY = 80.0;
 
 // Use this for avoiding the "epsilon problem" or the shadow acne problem.
 const float DEFAULT_TMIN = 10.0e-4;
@@ -35,10 +35,14 @@ const float DEFAULT_TMAX = 10.0e6;
 const int NUM_ITERATIONS = 2;
 
 // Constants for the scene objects.
-const int NUM_LIGHTS = 2;
+const int NUM_LIGHTS = 3;
 const int NUM_MATERIALS = 3;
-const int NUM_PLANES = 2;
+const int NUM_PLANES = 3;
 const int NUM_SPHERES = 2;
+
+vec3 cam_pos = vec3(2.0, 2.0, 2.0);
+vec3 cam_lookat = vec3(0.0, 2.0, 0.0);
+vec3 cam_up_vec = vec3(0.0, 1.0, 0.0);
 
 //============================================================================
 // Define new struct types.
@@ -105,20 +109,26 @@ void InitScene() {
   Plane[0].D = 0.0;
   Plane[0].materialID = 0;
 
-  // Vertical plane.
-  Plane[1].A = 0.0;
+  Plane[1].A = 1.0;
   Plane[1].B = 0.0;
-  Plane[1].C = 1.0;
-  Plane[1].D = 3.5;
+  Plane[1].C = 0.0;
+  Plane[1].D = 0.0;
   Plane[1].materialID = 0;
 
+  // Vertical plane.
+  Plane[2].A = 0.0;
+  Plane[2].B = 0.0;
+  Plane[2].C = 1.0;
+  Plane[2].D = 0.0;
+  Plane[2].materialID = 0;
+
   // Center bouncing sphere.
-  Sphere[0].center = vec3(0.0, abs(sin(2.0 * iTime)) + 0.7, 0.0);
-  Sphere[0].radius = 0.7;
+  Sphere[0].center = vec3(2.0, 1.6, 2.0);
+  Sphere[0].radius = 0.2;
   Sphere[0].materialID = 1;
 
   // Circling sphere.
-  Sphere[1].center = vec3(1.5 * cos(iTime), 0.5, 1.5 * sin(iTime));
+  Sphere[1].center = vec3(2.0, 0.9, 2.0);
   Sphere[1].radius = 0.5;
   Sphere[1].materialID = 2;
 
@@ -144,14 +154,26 @@ void InitScene() {
   Material[2].n = 128.0;
 
   // Light 0.
-  Light[0].position = vec3(4.0, 8.0, -3.0);
-  Light[0].I_a = vec3(0.1, 0.1, 0.1);
-  Light[0].I_source = vec3(1.0, 1.0, 1.0);
+  float T = 0.0;
+  Light[0].position = vec3(2.0 + cos(iTime), 4.0, 2.0 + sin(iTime));
+  Light[0].I_a = 0.1 * cos(iTime + T + vec3(0, 2, 4));
+  Light[0].I_source = 0.33 + 0.33 * cos(iTime + T + vec3(0, 2, 4));
 
   // Light 1.
-  Light[1].position = vec3(-4.0, 8.0, 0.0);
-  Light[1].I_a = vec3(0.1, 0.1, 0.1);
-  Light[1].I_source = vec3(1.0, 1.0, 1.0);
+  T += PI * 2.0 / 3.0;
+  Light[1].position = vec3(2.0 + cos(iTime + T), 4.0, 2.0 + sin(iTime + T));
+  Light[1].I_a = 0.1 * cos(iTime + T + vec3(0, 2, 4));
+  Light[1].I_source = 0.33 + 0.33 * cos(iTime + T + vec3(0, 2, 4));
+
+  // Light 2.
+  T += PI * 2.0 / 3.0;
+  Light[2].position = vec3(2.0 + cos(iTime + T), 4.0, 2.0 + sin(iTime + T));
+  Light[2].I_a = 0.1 * cos(iTime + T + vec3(0, 2, 4));
+  Light[2].I_source = 0.33 + 0.33 * cos(iTime + T + vec3(0, 2, 4));
+
+  cam_pos = vec3(2.0 - sqrt(2.0) * 0.1, 1.6, 2.0 - sqrt(2.0) * 0.1);
+  cam_lookat = vec3(0.0, 1.6, 0.0);
+  cam_up_vec = vec3(0.0, 1.0, 0.0);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -472,9 +494,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   InitScene();
 
   // Camera position and orientation in world space.
-  vec3 cam_pos = vec3(2.5, 1.0, 2.5);
-  vec3 cam_lookat = vec3(0.25, 1.0, 0.0);
-  vec3 cam_up_vec = vec3(0.0, 1.0, 0.0);
+  // vec3 cam_pos = vec3(5.0 - sqrt(2.0) * 0.11, 2.0, 5.0 - sqrt(2.0) * 0.11);
+  // vec3 cam_lookat = vec3(0.0, 2.0, 0.0);
+  // vec3 cam_up_vec = vec3(0.0, 1.0, 0.0);
 
   // Camera coordinate frame in world space.
   vec3 cam_z_axis = normalize(cam_pos - cam_lookat);
@@ -487,7 +509,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // Perpendicular distance of the image rectangle from the camera.
   // If implementing depth-of-field, the plane of the image rectangle
   // is the plane of focus.
-  float image_dist = distance(cam_pos, vec3(0.0, 0.7, 0.0));
+  float image_dist = 0.01; // distance(cam_pos, vec3(0.0, 0.01, 0.0));
 
   float image_height = 2.0 * image_dist * tan(cam_FOVY / 2.0);
   float image_width = image_height * iResolution.x / iResolution.y;
@@ -516,7 +538,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // depth-of-field effect and for image anti-aliasing (reduce jaggies).
   //=======================================================================
   // Number of samples (random primary rays) per pixel.
-  const int SPP = 32;
+  const int SPP = 16;
 
   // Lens aperture width. Assume square aperture.
   const float aperture_width = 0.3;
@@ -526,46 +548,38 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // TASK 2: MODIFY THE CODE BELOW. //
   ////////////////////////////////////
 
-  vec3 averageColor = vec3(0.0);
-  for (int i = 0; i < SPP; ++i) {
-    vec2 rectPoint = vec2(rand() - 0.5, rand() - 0.5) + fragCoord;
+  // Current pixel 3D position in camera space.
+  vec3 pixel_pos = image_origin + vec3(pixel_width * fragCoord, 0);
 
-    // Current pixel 3D position in camera space.
-    vec3 pixel_pos = image_origin + vec3(pixel_width * rectPoint, 0);
+  // Create primary ray.
+  Ray_t pRay;
+  pRay.o = cam_pos;
+  pRay.d =
+      normalize(cam_pos + pixel_pos.x * cam_x_axis + pixel_pos.y * cam_y_axis +
+                pixel_pos.z * cam_z_axis - pRay.o);
 
-    // Create primary ray.
-    Ray_t pRay;
-    pRay.o = cam_pos + aperture_width * (cam_x_axis * (rand() - 0.5) +
-                                         cam_y_axis * (rand() - 0.5));
-    pRay.d =
-        normalize(cam_pos + pixel_pos.x * cam_x_axis +
-                  pixel_pos.y * cam_y_axis + pixel_pos.z * cam_z_axis - pRay.o);
+  // Start Ray Tracing.
+  // Use iterations to emulate the recursion.
 
-    // Start Ray Tracing.
-    // Use iterations to emulate the recursion.
+  vec3 I_result = vec3(0.0);
+  vec3 compounded_k_rg = vec3(1.0);
+  Ray_t nextRay = pRay;
 
-    vec3 I_result = vec3(0.0);
-    vec3 compounded_k_rg = vec3(1.0);
-    Ray_t nextRay = pRay;
+  for (int level = 0; level <= NUM_ITERATIONS; level++) {
+    bool hasHit;
+    vec3 hitPos, hitNormal, k_rg;
 
-    for (int level = 0; level <= NUM_ITERATIONS; level++) {
-      bool hasHit;
-      vec3 hitPos, hitNormal, k_rg;
+    vec3 I_local = CastRay(nextRay, hasHit, hitPos, hitNormal, k_rg);
 
-      vec3 I_local = CastRay(nextRay, hasHit, hitPos, hitNormal, k_rg);
+    I_result += compounded_k_rg * I_local;
 
-      I_result += compounded_k_rg * I_local;
+    if (!hasHit)
+      break;
 
-      if (!hasHit)
-        break;
+    compounded_k_rg *= k_rg;
 
-      compounded_k_rg *= k_rg;
-
-      nextRay = Ray_t(hitPos, normalize(reflect(nextRay.d, hitNormal)));
-    }
-
-    averageColor += I_result / float(SPP);
+    nextRay = Ray_t(hitPos, normalize(reflect(nextRay.d, hitNormal)));
   }
 
-  fragColor = vec4(averageColor, 1.0);
+  fragColor = vec4(I_result, 1.0);
 }
