@@ -2,7 +2,8 @@
 // STUDENT NAME: Xing Rulin
 // STUDENT NO.: A0214251W
 // NUS EMAIL ADDRESS: E0518535@u.nus.edu
-// COMMENTS TO GRADER: None
+// COMMENTS TO GRADER: Make the two mirrors vertical so that you can see three
+// images in the mirror
 //
 //============================================================
 
@@ -32,13 +33,13 @@ const float DEFAULT_TMAX = 10.0e6;
 
 // Equivalent to number of recursion levels (0 means ray-casting only).
 // We are using iterations to replace recursions.
-const int NUM_ITERATIONS = 2;
+const int NUM_ITERATIONS = 3;
 
 // Constants for the scene objects.
-const int NUM_LIGHTS = 3;
-const int NUM_MATERIALS = 3;
+const int NUM_LIGHTS = 4;
+const int NUM_MATERIALS = 5;
 const int NUM_PLANES = 3;
-const int NUM_SPHERES = 2;
+const int NUM_SPHERES = 5;
 
 vec3 cam_pos = vec3(2.0, 2.0, 2.0);
 vec3 cam_lookat = vec3(0.0, 2.0, 0.0);
@@ -122,15 +123,32 @@ void InitScene() {
   Plane[2].D = 0.0;
   Plane[2].materialID = 0;
 
-  // Center bouncing sphere.
+  // Head.
   Sphere[0].center = vec3(2.0, 1.6, 2.0);
   Sphere[0].radius = 0.2;
   Sphere[0].materialID = 1;
 
-  // Circling sphere.
+  // Body.
   Sphere[1].center = vec3(2.0, 0.9, 2.0);
   Sphere[1].radius = 0.5;
   Sphere[1].materialID = 2;
+
+  // Eye.
+  Sphere[2].center =
+      vec3(2.0 - 0.2 * cos(PI / 18.0), 1.6, 2.0 - 0.2 * sin(PI / 18.0));
+  Sphere[2].radius = 0.025;
+  Sphere[2].materialID = 3;
+
+  // Eye
+  Sphere[3].center =
+      vec3(2.0 - 0.2 * sin(PI / 18.0), 1.6, 2.0 - 0.2 * cos(PI / 18.0));
+  Sphere[3].radius = 0.025;
+  Sphere[3].materialID = 3;
+
+  // Ball
+  Sphere[4].center = vec3(2.0 + cos(iTime), 0.9, 2.0 + sin(iTime));
+  Sphere[4].radius = 0.1;
+  Sphere[4].materialID = 4;
 
   // Silver material.
   Material[0].k_d = vec3(0.5, 0.5, 0.5);
@@ -153,6 +171,20 @@ void InitScene() {
   Material[2].k_rg = 0.5 * Material[2].k_r;
   Material[2].n = 128.0;
 
+  // Black material
+  Material[3].k_d = vec3(0.0, 0.0, 0.0);
+  Material[3].k_a = vec3(0.0, 0.0, 0.0);
+  Material[3].k_r = vec3(0.0, 0.0, 0.0);
+  Material[3].k_rg = vec3(0.0, 0.0, 0.0);
+  Material[3].n = 64.0;
+
+  // Red material
+  Material[4].k_d = vec3(0.8, 0.0, 0.0);
+  Material[4].k_a = 0.2 * Material[2].k_d;
+  Material[4].k_r = vec3(1.0, 1.0, 1.0);
+  Material[4].k_rg = 0.5 * Material[2].k_r;
+  Material[4].n = 128.0;
+
   // Light 0.
   float T = 0.0;
   Light[0].position = vec3(2.0 + cos(iTime), 4.0, 2.0 + sin(iTime));
@@ -171,6 +203,12 @@ void InitScene() {
   Light[2].I_a = 0.1 * cos(iTime + T + vec3(0, 2, 4));
   Light[2].I_source = 0.33 + 0.33 * cos(iTime + T + vec3(0, 2, 4));
 
+  // Light 3.
+  Light[3].position = vec3(4.0, -3.0, 4.0);
+  Light[3].I_a = vec3(0.1, 0.1, 0.1);
+  Light[3].I_source = vec3(1.0, 1.0, 1.0);
+
+  // Camera position and orientation in world space.
   cam_pos = vec3(2.0 - sqrt(2.0) * 0.1, 1.6, 2.0 - sqrt(2.0) * 0.1);
   cam_lookat = vec3(0.0, 1.6, 0.0);
   cam_up_vec = vec3(0.0, 1.0, 0.0);
@@ -493,11 +531,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
   InitScene();
 
-  // Camera position and orientation in world space.
-  // vec3 cam_pos = vec3(5.0 - sqrt(2.0) * 0.11, 2.0, 5.0 - sqrt(2.0) * 0.11);
-  // vec3 cam_lookat = vec3(0.0, 2.0, 0.0);
-  // vec3 cam_up_vec = vec3(0.0, 1.0, 0.0);
-
   // Camera coordinate frame in world space.
   vec3 cam_z_axis = normalize(cam_pos - cam_lookat);
   vec3 cam_x_axis = normalize(cross(cam_up_vec, cam_z_axis));
@@ -509,7 +542,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // Perpendicular distance of the image rectangle from the camera.
   // If implementing depth-of-field, the plane of the image rectangle
   // is the plane of focus.
-  float image_dist = 0.01; // distance(cam_pos, vec3(0.0, 0.01, 0.0));
+  float image_dist = 0.1; // distance(cam_pos, vec3(0.0, 0.01, 0.0));
 
   float image_height = 2.0 * image_dist * tan(cam_FOVY / 2.0);
   float image_width = image_height * iResolution.x / iResolution.y;
