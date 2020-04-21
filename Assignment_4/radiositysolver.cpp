@@ -322,20 +322,6 @@ static void UpdateRadiosities( const QM_Model *m, const float shotPower[3], cons
         /**********************************************************
         ****************** WRITE YOUR CODE HERE ******************
         **********************************************************/
-
-        //R component
-        float red, gre, blu;
-        red = m->gatherers[g]->surface->reflectivity[0] * deltaFormFactors[i] * shotPower[0] / m->gatherers[g]->area;
-        gre = m->gatherers[g]->surface->reflectivity[1] * deltaFormFactors[i] * shotPower[1] / m->gatherers[g]->area;
-        blu = m->gatherers[g]->surface->reflectivity[2] * deltaFormFactors[i] * shotPower[2] / m->gatherers[g]->area;
-
-        m->gatherers[g]->radiosity[0] += red;
-        m->gatherers[g]->radiosity[1] += gre;
-        m->gatherers[g]->radiosity[2] += blu;
-
-        m->gatherers[g]->shooter->unshotPower[0] += m->gatherers[g]->surface->reflectivity[0] * deltaFormFactors[i] * shotPower[0];
-        m->gatherers[g]->shooter->unshotPower[1] += m->gatherers[g]->surface->reflectivity[1] * deltaFormFactors[i] * shotPower[1];
-        m->gatherers[g]->shooter->unshotPower[2] += m->gatherers[g]->surface->reflectivity[2] * deltaFormFactors[i] * shotPower[2];
     }
 }
 
