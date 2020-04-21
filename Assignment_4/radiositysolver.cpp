@@ -282,14 +282,12 @@ static void SetupHemicubeSideView( int face, const QM_ShooterQuad *shooterQuad, 
     **********************************************************/
     
     // Step 1: Get the view coordinate system axis vector
-    float upVec[3];
     float refVec[3];
     float centerVec[3];
 
     int idx1 = (face + 3) % 4;
     int idx2 = (face + 4) % 4;
     VecDiff(refVec, shooterQuad->v[idx1], shooterQuad->v[idx2]);  // x axis
-    VecCrossProd(upVec, shooterQuad->normal, refVec);             // y axis
     VecSum(centerVec, shooterQuad->centroid, refVec);
 
     // Step 2: Setup projection matrix
@@ -322,6 +320,7 @@ static void UpdateRadiosities( const QM_Model *m, const float shotPower[3], cons
         /**********************************************************
         ****************** WRITE YOUR CODE HERE ******************
         **********************************************************/
+
     }
 }
 
