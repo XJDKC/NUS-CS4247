@@ -198,6 +198,15 @@ static void PreComputeTopFaceDeltaFormFactors(float deltaFormFactors[], int numP
     ****************** WRITE YOUR CODE HERE ******************
     **********************************************************/
 
+    double pixelWidth = 2.0 / numPixelsOnWidth;
+    double dA = 2.0 * 2.0 / pow(numPixelsOnWidth, 2);
+
+    int offset = 0;
+    for (double x = -1.0 + pixelWidth / 2; x < 1.0; x += pixelWidth) {
+        for (double y = -1.0 + pixelWidth / 2; y < 1.0; y += pixelWidth) {
+            deltaFormFactors[offset++] = dA / (M_PI * pow(x * x + y * y + 1, 2));
+        }
+    }
 }
 
 
@@ -212,6 +221,15 @@ static void PreComputeSideFaceDeltaFormFactors(float deltaFormFactors[], int num
     ****************** WRITE YOUR CODE HERE ******************
     **********************************************************/
 
+    double pixelWidth = 2.0 / numPixelsOnWidth;
+    double dA = 2.0 * 2.0 / pow(numPixelsOnWidth, 2);
+
+    int offset = 0;
+    for (double z = pixelWidth / 2; z < 1.0; z += pixelWidth) {
+        for (double y = -1.0 + pixelWidth / 2; y < 1.0; y += pixelWidth) {
+            deltaFormFactors[offset++] = dA * z / (M_PI * pow(y * y + z * z + 1, 2));
+        }
+    }
 }
 
 
