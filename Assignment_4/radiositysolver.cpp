@@ -245,6 +245,26 @@ static void SetupHemicubeTopView( const QM_ShooterQuad *shooterQuad, float nearP
     ****************** WRITE YOUR CODE HERE ******************
     **********************************************************/
 
+	// Step 1: Get the view coordinate system axis vector
+	float upVec[3];
+	float refVec[3];
+    float centerVec[3];
+
+	VecDiff(refVec, shooterQuad->v[0], shooterQuad->v[1]);  // x axis
+	VecCrossProd(upVec, shooterQuad->normal, refVec);       // y axis
+    VecSum(centerVec, shooterQuad->centroid, shooterQuad->normal);
+
+	// Step 2: Setup projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glFrustum(-nearPlane, nearPlane, -nearPlane, nearPlane, nearPlane, farPlane);
+
+	// Step 3: Setup modelview matrix
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+    gluLookAt(shooterQuad->centroid[0], shooterQuad->centroid[1], shooterQuad->centroid[2],
+              centerVec[0], centerVec[1], centerVec[2],
+              upVec[0], upVec[1], upVec[2]);
 }
 
 
@@ -260,7 +280,29 @@ static void SetupHemicubeSideView( int face, const QM_ShooterQuad *shooterQuad, 
     /**********************************************************
     ****************** WRITE YOUR CODE HERE ******************
     **********************************************************/
+    
+    // Step 1: Get the view coordinate system axis vector
+    float upVec[3];
+    float refVec[3];
+    float centerVec[3];
 
+    int idx1 = (face + 3) % 4;
+    int idx2 = (face + 4) % 4;
+    VecDiff(refVec, shooterQuad->v[idx1], shooterQuad->v[idx2]);  // x axis
+    VecCrossProd(upVec, shooterQuad->normal, refVec);             // y axis
+    VecSum(centerVec, shooterQuad->centroid, refVec);
+
+    // Step 2: Setup projection matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-nearPlane, nearPlane, 0, nearPlane, nearPlane, farPlane);
+
+    // Step 3: Setup modelview matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(shooterQuad->centroid[0], shooterQuad->centroid[1], shooterQuad->centroid[2],
+              centerVec[0], centerVec[1], centerVec[2],
+              shooterQuad->normal[0], shooterQuad->normal[1], shooterQuad->normal[2]);
 }
 
 
@@ -281,6 +323,19 @@ static void UpdateRadiosities( const QM_Model *m, const float shotPower[3], cons
         ****************** WRITE YOUR CODE HERE ******************
         **********************************************************/
 
+        //R component
+        float red, gre, blu;
+        red = m->gatherers[g]->surface->reflectivity[0] * deltaFormFactors[i] * shotPower[0] / m->gatherers[g]->area;
+        gre = m->gatherers[g]->surface->reflectivity[1] * deltaFormFactors[i] * shotPower[1] / m->gatherers[g]->area;
+        blu = m->gatherers[g]->surface->reflectivity[2] * deltaFormFactors[i] * shotPower[2] / m->gatherers[g]->area;
+
+        m->gatherers[g]->radiosity[0] += red;
+        m->gatherers[g]->radiosity[1] += gre;
+        m->gatherers[g]->radiosity[2] += blu;
+
+        m->gatherers[g]->shooter->unshotPower[0] += m->gatherers[g]->surface->reflectivity[0] * deltaFormFactors[i] * shotPower[0];
+        m->gatherers[g]->shooter->unshotPower[1] += m->gatherers[g]->surface->reflectivity[1] * deltaFormFactors[i] * shotPower[1];
+        m->gatherers[g]->shooter->unshotPower[2] += m->gatherers[g]->surface->reflectivity[2] * deltaFormFactors[i] * shotPower[2];
     }
 }
 
