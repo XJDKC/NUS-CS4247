@@ -320,7 +320,20 @@ static void UpdateRadiosities( const QM_Model *m, const float shotPower[3], cons
         /**********************************************************
         ****************** WRITE YOUR CODE HERE ******************
         **********************************************************/
+        
+        // Set alias for some arrays
+        float* reflectivity = m->gatherers[g]->surface->reflectivity;
+        float* radiosity = m->gatherers[g]->radiosity;
+        float* unshotPower = m->gatherers[g]->shooter->unshotPower;
 
+        // Start Update
+        for (int j = 0; j < 3; ++j) {
+            // Step 1: Update the radiosity
+            radiosity[j] += reflectivity[j] * shotPower[j] * dF / m->gatherers[g]->area;
+
+            // Step 2: Update the unsot power
+            unshotPower[j] += reflectivity[j] * shotPower[j] * dF;
+        }
     }
 }
 
